@@ -39,13 +39,13 @@ def pos2px(x,y):
     return (int(fullscreen_width *x), int(fullscreen_height*y))
 
 def getVelocity(oldpos, newpos):
-    speed = [oldpos[0] - newpos[0], oldpos[1] - newpos[1]] # delta
-    norm = (speed[0]**2 + speed[1]**2)**(0.5)
-    if norm == 0:
+    direction = [oldpos[0] - newpos[0], oldpos[1] - newpos[1]] # delta
+    magnitude = (direction[0]**2 + direction[1]**2)**(0.5)
+    if magnitude == 0:
         return [0,0]
-    speed[0] /= norm
-    speed[1] /= norm
-    return speed
+    direction[0] /= magnitude
+    direction[1] /= magnitude
+    return direction, magnitude
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="convert shape to geojson")
@@ -68,9 +68,9 @@ if __name__ == "__main__":
     ballDiameter = 20
 
     player1pos = (0,0)
-    player1speed = [0,0]
+    player1speed = 0
     player2pos = (0, int(fullscreen_height/2) )
-    player2speed = [0,0]
+    player2speed = 0
 
     player1score = 0
     player2score = 0
@@ -91,11 +91,11 @@ if __name__ == "__main__":
         for obj in tracking.objects():
             #print(obj.xmot,obj.ymot)
             if obj.id == player1id:
-                player1speed = getVelocity(player1pos,pos2px(obj.xpos, obj.ypos))
+                _, player1speed = getVelocity(player1pos,pos2px(obj.xpos, obj.ypos))
                 player1pos = pos2px(obj.xpos, obj.ypos)
                 #player1speed = [obj.xmot, obj.ymot]
             if obj.id == player2id:
-                player2speed = getVelocity(player2pos,pos2px(obj.xpos, obj.ypos))
+                _, player2speed = getVelocity(player2pos,pos2px(obj.xpos, obj.ypos))
                 player2pos = pos2px(obj.xpos, obj.ypos)
                 #player2speed = [obj.xmot, obj.ymot]
 
@@ -124,13 +124,16 @@ if __name__ == "__main__":
         # check ball contact
         if checkCollision(player1pos, playerDiameter, ballPos, ballDiameter) and not collision:
             #p1 hit ball
-            vector = getVelocity(player1pos, ballPos)
-            ballSpeed = [vector[0]*-10, vector[1]*-10]
+            vector, magnitude = getVelocity(player1pos, ballPos)
+            magnitude = (magnitude + player1speed) * 0.1
+            print(magnitude)
+            ballSpeed = [vector[0]*-magnitude, vector[1]*-magnitude]
             collision = True
         elif checkCollision(player2pos, playerDiameter, ballPos, ballDiameter) and not collision:
             #p2 hit ball
-            vector = getVelocity(player2pos, ballPos)
-            ballSpeed = [vector[0]*-10, vector[1]*-10]
+            vector, magnitude = getVelocity(player2pos, ballPos)
+            magnitude = (magnitude + player2speed) * 0.1
+            ballSpeed = [vector[0]*-magnitude, vector[1]*-magnitude]
             collision = True
         else:
             collision = False
@@ -147,9 +150,9 @@ if __name__ == "__main__":
 
         # bouncing i.e. hitting top or bottom screen edge
         if ballPos[1] < 0:
-            ballSpeed[1] *= -1
+            ballSpeed[1] *= -0.8
         elif ballPos[1] > fullscreen_height:
-            ballSpeed[1] *= -1
+            ballSpeed[1] *= -0.8
 
         # Keyboard input
         keys = []   # reset input
