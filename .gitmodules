@@ -1,0 +1,3 @@
+[submodule "pytuio"]
+	path = pytuio
+	url = git@github.com:luftj/pytuio.git
