@@ -69,10 +69,8 @@ if __name__ == "__main__":
 
     player1pos = (0,0)
     player1speed = 0
-    player1speedage = 1
     player2pos = (0, int(fullscreen_height/2) )
     player2speed = 0
-    player2speedage = 1
 
     player1score = 0
     player2score = 0
@@ -81,7 +79,7 @@ if __name__ == "__main__":
     collision = False
 
     pygame.font.init()
-    #print( pygame.font.get_fonts())
+    
     # pick a font
     myfont = pygame.font.Font("comic.ttf", 40)
 
@@ -91,24 +89,21 @@ if __name__ == "__main__":
     while True:
         deltatime = clock.tick()
         
-        #print(deltatime)
         # handle objects
         for i in range(args.updates):
             tracking.update()
 
         for obj in tracking.objects():
-            #print(obj.xmot,obj.ymot)
             if obj.id == player1id:
                 _, player1speed = getVelocity(player1pos,pos2px(obj.xpos, obj.ypos))
-                player1speed /= deltatime
-                #player1speedage = 
+                if deltatime > 0:
+                    player1speed /= deltatime
                 player1pos = pos2px(obj.xpos, obj.ypos)
-                #player1speed = [obj.xmot, obj.ymot]
             if obj.id == player2id:
                 _, player2speed = getVelocity(player2pos,pos2px(obj.xpos, obj.ypos))
-                player2speed /= deltatime
+                if deltatime > 0:
+                    player2speed /= deltatime
                 player2pos = pos2px(obj.xpos, obj.ypos)
-                #player2speed = [obj.xmot, obj.ymot]
 
         #update ball
         ballPos[0] = int(ballPos[0] + ballSpeed[0]*0.1 * deltatime)
@@ -120,7 +115,6 @@ if __name__ == "__main__":
         # drawing
         screen.fill(black)
         pygame.draw.circle(screen, (255,0,0), player1pos, playerDiameter)
-        #print(player1pos)
         pygame.draw.circle(screen, (0,0,255), player2pos , playerDiameter)
         pygame.draw.circle(screen, (255,255,255), ballPos , 20)
         
@@ -136,17 +130,18 @@ if __name__ == "__main__":
         pygame.display.flip()
 
         # check ball contact
-        if checkCollision(player1pos, playerDiameter, ballPos, ballDiameter) and not collision:
+        ballmagnitude = (ballSpeed[0]**2+ballSpeed[1]**2)**0.5
+        if checkCollision(player1pos, playerDiameter, ballPos, ballDiameter):
             #p1 hit ball
             vector, _ = getVelocity(player1pos, ballPos)
-            magnitude = 1+player1speed # +1 to make the ball react to a static pedal
-            ballSpeed = [ballSpeed[0]+vector[0]*-magnitude, ballSpeed[1]+vector[1]*-magnitude]
+            magnitude = ballmagnitude+player1speed
+            ballSpeed = [vector[0]*-magnitude, vector[1]*-magnitude]
             collision = True
-        elif checkCollision(player2pos, playerDiameter, ballPos, ballDiameter) and not collision:
+        elif checkCollision(player2pos, playerDiameter, ballPos, ballDiameter):
             #p2 hit ball
             vector, _ = getVelocity(player2pos, ballPos)
-            magnitude = 1+player2speed # +1 to make the ball react to a static pedal
-            ballSpeed = [ballSpeed[0]+vector[0]*-magnitude, ballSpeed[1]+vector[1]*-magnitude]
+            magnitude = ballmagnitude+player2speed
+            ballSpeed = [vector[0]*-magnitude, vector[1]*-magnitude]
             collision = True
         else:
             collision = False
