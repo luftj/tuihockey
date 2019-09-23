@@ -38,6 +38,15 @@ def checkCollision(pos1, dia1, pos2, dia2):
 def pos2px(x,y):
     return (int(fullscreen_width *x), int(fullscreen_height*y))
 
+def getVelocity(oldpos, newpos):
+    speed = [oldpos[0] - newpos[0], oldpos[1] - newpos[1]] # delta
+    norm = (speed[0]**2 + speed[1]**2)**(0.5)
+    if norm == 0:
+        return [0,0]
+    speed[0] /= norm
+    speed[1] /= norm
+    return speed
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="convert shape to geojson")
     parser.add_argument('--ip', type=str, default=config["tuio_host"],help="the IP address of the tuio host. If omitted, read from config.json")
@@ -60,11 +69,12 @@ if __name__ == "__main__":
     player1pos = (0,0)
     player1speed = [0,0]
     player2pos = (0, int(fullscreen_height/2) )
+    player2speed = [0,0]
 
     player1score = 0
     player2score = 0
 
-    playerDiameter = 40
+    playerDiameter = 70
 
     pygame.font.init()
     #print( pygame.font.get_fonts())
@@ -79,10 +89,13 @@ if __name__ == "__main__":
         for obj in tracking.objects():
             #print(obj.xmot,obj.ymot)
             if obj.id == player1id:
-                player1pos = pos2px(obj.xpos,obj.ypos)
-                player1speed = [obj.xmot, obj.ymot]
+                player1speed = getVelocity(player1pos,pos2px(obj.xpos, obj.ypos))
+                player1pos = pos2px(obj.xpos, obj.ypos)
+                #player1speed = [obj.xmot, obj.ymot]
             if obj.id == player2id:
-                player2pos = pos2px(obj.xpos,obj.ypos)
+                player2speed = getVelocity(player2pos,pos2px(obj.xpos, obj.ypos))
+                player2pos = pos2px(obj.xpos, obj.ypos)
+                #player2speed = [obj.xmot, obj.ymot]
 
         #update ball
         ballPos[0] = int(ballPos[0] + ballSpeed[0])
@@ -113,7 +126,7 @@ if __name__ == "__main__":
             pass
         if checkCollision(player2pos,playerDiameter,ballPos,20):
             #p2 hit ball
-            ballSpeed = [10* player1speed[0],10* player1speed[1]] 
+            ballSpeed = [10* player2speed[0],10* player2speed[1]] 
             pass
 
         # scoring
@@ -128,10 +141,8 @@ if __name__ == "__main__":
 
         # bouncing
         if ballPos[1] < 0:
-            ballSpeed[0] *= -1
             ballSpeed[1] *= -1
         if ballPos[1] > fullscreen_height:
-            ballSpeed[0] *= -1
             ballSpeed[1] *= -1
 
         # Keyboard input
