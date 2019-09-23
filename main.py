@@ -111,8 +111,11 @@ if __name__ == "__main__":
                 #player2speed = [obj.xmot, obj.ymot]
 
         #update ball
-        ballPos[0] = int(ballPos[0] + ballSpeed[0])
-        ballPos[1] = int(ballPos[1] + ballSpeed[1])
+        ballPos[0] = int(ballPos[0] + ballSpeed[0]*0.1 * deltatime)
+        ballPos[1] = int(ballPos[1] + ballSpeed[1]*0.1 * deltatime)
+        # if deltatime > 0:
+        #     ballSpeed[0] += -ballSpeed[0] * 0.9 / deltatime
+        #     ballSpeed[1] += -ballSpeed[1] * 0.9 / deltatime
 
         # drawing
         screen.fill(black)
