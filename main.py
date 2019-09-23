@@ -33,7 +33,7 @@ def checkCollision(pos1, dia1, pos2, dia2):
     dx = pos1[0] - pos2[0]
     dy = pos1[1] - pos2[1]
     # L2-norm
-    return dx * dx + dy * dy < (dia1+dia2) * (dia1+dia2)
+    return dx**2 + dy**2 <= (dia1+dia2)**2
 
 def pos2px(x,y):
     return (int(fullscreen_width *x), int(fullscreen_height*y))
@@ -65,6 +65,7 @@ if __name__ == "__main__":
 
     ballPos = [int(fullscreen_width/2), int(fullscreen_height/2)]
     ballSpeed = [0, 0]
+    ballDiameter = 20
 
     player1pos = (0,0)
     player1speed = [0,0]
@@ -75,6 +76,7 @@ if __name__ == "__main__":
     player2score = 0
 
     playerDiameter = 70
+    collision = False
 
     pygame.font.init()
     #print( pygame.font.get_fonts())
@@ -120,29 +122,33 @@ if __name__ == "__main__":
         pygame.display.flip()
 
         # check ball contact
-        if checkCollision(player1pos,playerDiameter,ballPos,20):
+        if checkCollision(player1pos, playerDiameter, ballPos, ballDiameter) and not collision:
             #p1 hit ball
-            ballSpeed = [10* player1speed[0],10* player1speed[1]] 
-            pass
-        if checkCollision(player2pos,playerDiameter,ballPos,20):
+            vector = getVelocity(player1pos, ballPos)
+            ballSpeed = [vector[0]*-10, vector[1]*-10]
+            collision = True
+        elif checkCollision(player2pos, playerDiameter, ballPos, ballDiameter) and not collision:
             #p2 hit ball
-            ballSpeed = [10* player2speed[0],10* player2speed[1]] 
-            pass
+            vector = getVelocity(player2pos, ballPos)
+            ballSpeed = [vector[0]*-10, vector[1]*-10]
+            collision = True
+        else:
+            collision = False
 
-        # scoring
+        # scoring i.e. hitting left or right screen edge
         if ballPos[0] < 0:
             player1score += 1
             ballPos = [int(fullscreen_width/2), int(fullscreen_height/2)]
             ballSpeed = [0,0]
-        if ballPos[0] > fullscreen_width:
+        elif ballPos[0] > fullscreen_width:
             player2score += 1
             ballPos = [int(fullscreen_width/2), int(fullscreen_height/2)]
             ballSpeed = [0,0]
 
-        # bouncing
+        # bouncing i.e. hitting top or bottom screen edge
         if ballPos[1] < 0:
             ballSpeed[1] *= -1
-        if ballPos[1] > fullscreen_height:
+        elif ballPos[1] > fullscreen_height:
             ballSpeed[1] *= -1
 
         # Keyboard input
